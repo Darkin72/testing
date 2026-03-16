@@ -1,32 +1,29 @@
-# Decision Table Testing
+# Bảng Quyết định (Decision Table)
 
-This decision table captures the combinational logic that applies to the shipping fee calculator. Rather than combining all inputs into one giant matrix, we factor the Free Shipping condition as overriding the subsequent calculations.
+Giả sử input đều là hợp lệ (Valid Input). Bài toán quy định **Miễn phí vận chuyển** cho khách hàng đặc thù dựa vào 3 điều kiện đồng thời. Khách VIP cũng nhận được chiết khấu `10%` áp dụng lên tổng (Base + Surcharge) cho quy tắc thông thường.
 
-## Table 1: Free Shipping Override (Stage 4 check first)
+## DT1: Quy tắc Miễn phí (Free Shipping Override)
 
-| Condition / Rule                | DT1 | DT2 | DT3 | DT4 |
-| ------------------------------- | --- | --- | --- | --- |
-| `order_value ≥ 500000`          | T   | T   | F   | F   |
-| `distance_km ≤ 10`              | T   | F   | T   | F   |
-| **Action**                      |     |     |     |     |
-| Applicable for Free Shipping    | Yes | No  | No  | No  |
-| Final Fee is 0?                 | Yes | No  | No  | No  |
-| Proceeds to regular fee config? | No  | Yes | Yes | Yes |
+| Rule                      | DT1          | DT2                   | DT3                   | DT4                   |
+| ------------------------- | ------------ | --------------------- | --------------------- | --------------------- |
+| Khách hàng là `VIP`       | T            | T                     | T                     | T                     |
+| Khoảng cách ≤ 5 km        | T            | T                     | F                     | T                     |
+| Khối lượng ≤ 2 kg         | T            | F                     | T                     | T                     |
+| Customer != VIP           | F            | F                     | F                     | T                     |
+| **Kết quả Phí cuối cùng** | **0** (Free) | Tính theo Rule thường | Tính theo Rule thường | Tính theo Rule thường |
 
-_If Free Shipping applies, the variables `weight_kg` and `customer_type` do not affect the outcome._
+## DT2: Bảng đại diện cấu hình hệ thống tính phí thông thường
 
-## Table 2: Regular Fee Configuration (When Free Shipping is False)
+Công thức bên dưới tính toán logic theo Base Fee (`BF`), Surcharge (`SC`) và Discount (`DC`).
+Tổng kết hợp các điều kiện hợp lệ là: 3 khoảng cách × 2 khoảng cân nặng × 2 loại KH = **12 trường hợp**.
 
-Since Distance has 4 cases, Weight has 3 cases, and Customer Type has 3 cases, the full logical domain is 4 _ 3 _ 3 = 36 combinations.
-Below represents key test scenarios reflecting each rule's execution mathematically:
+Dưới đây chỉ ra mẫu đại diện tương trưng cho từng nhánh trong bảng quyết định:
 
-| Case ID | Distance Range  | Base Fee | Weight Range | Surcharge | Customer | Discount | Final Formula               |
-| ------- | --------------- | -------- | ------------ | --------- | -------- | -------- | --------------------------- |
-| R1      | d <= 5 (e.g. 4) | 15,000   | w <= 2       | 0         | NORMAL   | 0%       | (15K + 0) \* 1.0 = 15,000   |
-| R2      | d <= 5 (e.g. 4) | 15,000   | 2 < w <= 5   | 10,000    | MEMBER   | 10%      | (15K + 10K) \* 0.9 = 22,500 |
-| R3      | d <= 5 (e.g. 4) | 15,000   | w > 5        | 20,000    | VIP      | 20%      | (15K + 20K) \* 0.8 = 28,000 |
-| R4      | 5 < d <= 10     | 20,000   | w <= 2       | 0         | VIP      | 20%      | (20K + 0) \* 0.8 = 16,000   |
-| R5      | 10 < d <= 20    | 30,000   | 2 < w <= 5   | 10,000    | MEMBER   | 10%      | (30K + 10K) \* 0.9 = 36,000 |
-| R6      | d > 20          | 50,000   | w > 5        | 20,000    | NORMAL   | 0%       | (50K + 20K) \* 1.0 = 70,000 |
-
-_Note: R4 assumes `order_value < 500,000` since `d <= 10` would trigger Free Shipping if the order value was high._
+| ID  | Dải khoảng cách (BF) | Dải khối lượng (SC) | Customer Type | Quy định áp dụng (`(BF+SC)*DC`) | Kết quả (Fee) |
+| --- | -------------------- | ------------------- | ------------- | ------------------------------- | ------------- |
+| R1  | d ≤ 5 (15k)          | w ≤ 2 (0k)          | NORM          | (15k + 0) \* 1.0                | 15,000        |
+| R2  | d ≤ 5 (15k)          | w > 2 (20k)         | VIP           | (15k + 20k) \* 0.9              | 31,500        |
+| R3  | 5 < d ≤ 10 (20k)     | w ≤ 2 (0k)          | VIP           | (20k + 0) \* 0.9                | 18,000        |
+| R4  | 5 < d ≤ 10 (20k)     | w > 2 (20k)         | NORM          | (20k + 20k) \* 1.0              | 40,000        |
+| R5  | d > 10 (30k)         | w ≤ 2 (0k)          | VIP           | (30k + 0) \* 0.9                | 27,000        |
+| R6  | d > 10 (30k)         | w > 2 (20k)         | NORM          | (30k + 20k) \* 1.0              | 50,000        |

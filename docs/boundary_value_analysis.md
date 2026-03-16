@@ -1,52 +1,34 @@
-# Boundary Value Analysis (BVA)
+# Phân tích giá trị biên (Boundary Value Analysis)
 
-This document contains the Boundary Value Analysis for the main variables in the `calculate_shipping_fee` function. This analysis ensures our test cases adequately cover edge cases exactly AT, slightly BELOW, and slightly ABOVE the logical boundaries defined by the requirements.
+Bài toán yêu cầu phân tích các giá trị biên quan trọng trên số thực của khoảng cách (`distance_km`) và khối lượng (`weight_kg`).
 
-## 1. Input Parameter Constraints (Valid vs Invalid)
+## 1. Giới hạn tham số
 
-| Parameter     | Valid Range        | Just Below | Min Val | Normal | Max Val    | Just Above  |
-| ------------- | ------------------ | ---------- | ------- | ------ | ---------- | ----------- |
-| `distance_km` | 0 ≤ x ≤ 100        | -0.1 (-1)  | 0       | 50     | 100        | 100.1 (101) |
-| `weight_kg`   | 0 ≤ x ≤ 50         | -0.1 (-1)  | 0       | 25     | 50         | 50.1 (51)   |
-| `order_value` | 0 ≤ x ≤ 10,000,000 | -1         | 0       | 10^5   | 10,000,000 | 10,000,001  |
+- `distance_km` ≥ 0. Giá trị kiểm thử: `-0.1` (Invalid), `0` (Valid).
+- `weight_kg` ≥ 0. Giá trị kiểm thử: `-0.1` (Invalid), `0` (Valid).
+- Loại khách hàng được chấp nhận: `NORMAL`, `VIP`. Bất kỳ giá trị nào khác (ví dụ: `GUEST`) đều trả về lỗi `INVALID_INPUT`.
 
-## 2. Business Logic Boundaries
+## 2. Các điểm biên sinh phí (Logic Boundaries)
 
-### Distance (km) Boundaries
+### Theo từng Khoảng cách (Base Fee)
 
-The rules dictate steps at `5`, `10`, and `20`.
+Khoảng cách có lợi mức thay đổi tại `5 km` và `10 km`. Khởi tạo các điểm khảo sát liền kề:
 
-| Boundary Target | Test Value | Expected Base Fee Classification |
-| --------------- | ---------- | -------------------------------- |
-| Distance ≤ 5    | 4.9        | ≤ 5 km (15,000)                  |
-| Distance ≤ 5    | 5          | ≤ 5 km (15,000)                  |
-| 5 < d ≤ 10      | 5.1        | 5 < distance ≤ 10 km (20,000)    |
-| 5 < d ≤ 10      | 10         | 5 < distance ≤ 10 km (20,000)    |
-| 10 < d ≤ 20     | 10.1       | 10 < distance ≤ 20 km (30,000)   |
-| 10 < d ≤ 20     | 20         | 10 < distance ≤ 20 km (30,000)   |
-| d > 20          | 20.1       | distance > 20 km (50,000)        |
+| Mục tiêu biên     | Giá trị test | Kỳ vọng phân loại    | Phí cơ bản |
+| ----------------- | ------------ | -------------------- | ---------- |
+| distance ≤ 5      | 4.9          | ≤ 5 km               | 15,000     |
+| distance ≤ 5      | 5.0          | ≤ 5 km               | 15,000     |
+| 5 < distance ≤ 10 | 5.1          | 5 < distance ≤ 10 km | 20,000     |
+| 5 < distance ≤ 10 | 9.9          | 5 < distance ≤ 10 km | 20,000     |
+| 5 < distance ≤ 10 | 10.0         | 5 < distance ≤ 10 km | 20,000     |
+| distance > 10     | 10.1         | distance > 10 km     | 30,000     |
 
-### Weight (kg) Boundaries
+### Theo số Khối lượng (Weight Surcharge)
 
-The rules dictate steps at `2` and `5`.
+Khối lượng bị áp phụ phí nhảy vọt mức `2 kg`. Khởi tạo các điểm khảo sát:
 
-| Boundary Target | Test Value | Expected Surcharge Classification |
-| --------------- | ---------- | --------------------------------- |
-| weight ≤ 2      | 1.9        | ≤ 2 kg (0)                        |
-| weight ≤ 2      | 2          | ≤ 2 kg (0)                        |
-| 2 < w ≤ 5       | 2.1        | 2 < weight ≤ 5 kg (10,000)        |
-| 2 < w ≤ 5       | 5          | 2 < weight ≤ 5 kg (10,000)        |
-| w > 5           | 5.1        | weight > 5 kg (20,000)            |
-
-### Free Shipping Boundaries
-
-Triggered when `order_value ≥ 500000` AND `distance_km ≤ 10`.
-
-| Variable      | Test Value | Rule Satisfaction          | Result Expected         |
-| ------------- | ---------- | -------------------------- | ----------------------- |
-| `order_value` | 499999     | Not over 500k              | Normal Calculate        |
-| `order_value` | 500000     | Matches rule limit exactly | Free (if dist <= 10)    |
-| `order_value` | 500001     | Over 500k                  | Free (if dist <= 10)    |
-| `distance`    | 9.9        | Less than 10               | Free (if value >= 500k) |
-| `distance`    | 10         | Matches rule limit exactly | Free (if value >= 500k) |
-| `distance`    | 10.1       | Over 10                    | Normal Calculate        |
+| Mục tiêu biên | Giá trị test | Kỳ vọng phân loại | Phụ phí |
+| ------------- | ------------ | ----------------- | ------- |
+| weight ≤ 2    | 1.9          | ≤ 2 kg            | 0       |
+| weight ≤ 2    | 2.0          | ≤ 2 kg            | 0       |
+| weight > 2    | 2.1          | > 2 kg            | 20,000  |

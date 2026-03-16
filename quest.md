@@ -2,105 +2,131 @@
 
 ## 1. Overview
 
-This project defines a **shipping fee calculation system** for an e-commerce platform.
-The purpose of this exercise is to practice **black-box testing techniques**, specifically:
+This project defines a **shipping fee calculation system** for a delivery service.
+The purpose of this exercise is to practice **black-box testing techniques**, including:
 
 - Decision Table Testing
 - Boundary Value Analysis
 
-Students must implement the system and then design test cases using these techniques.
+Students are required to implement the system and design test cases based on the provided rules.
 
 ---
 
 # 2. Problem Description
 
-Create a program that calculates the **final shipping fee** for an order based on the following inputs:
+Create a program that calculates the **shipping fee** for a delivery order.
 
-Input parameters:
+The shipping cost depends on three parameters:
 
-- `distance_km` : distance between warehouse and customer
-- `weight_kg` : package weight
-- `customer_type` : NORMAL | MEMBER | VIP
-- `order_value` : total order value in VND
+- distance between the warehouse and the customer
+- weight of the package
+- customer type
 
-The program returns:
+The program must return the **final shipping fee in Vietnamese Dong (VND).**
+
+---
+
+# 3. Input Parameters
+
+The system receives the following inputs:
+
+| Parameter     | Description                             | Data Type | Unit |
+| ------------- | --------------------------------------- | --------- | ---- |
+| distance_km   | Distance between warehouse and customer | Float     | Km   |
+| weight_kg     | Weight of the package                   | Float     | Kg   |
+| customer_type | Type of customer (NORMAL, VIP)          | String    |      |
+
+---
+
+# 4. Output
+
+The system must return **one integer value**:
 
 ```
 final_shipping_fee
 ```
 
----
-
-# 3. Shipping Fee Rules
-
-The shipping fee is calculated in four stages:
-
-1. Base fee (based on distance)
-2. Weight surcharge
-3. Customer discount
-4. Free shipping rule
+The value represents the shipping fee in **Vietnamese Dong (VND)**.
 
 ---
 
-# 4. Base Fee (Distance)
+# 5. Shipping Fee Calculation Rules
 
-| Distance              | Base Fee |
-| --------------------- | -------- |
-| distance ≤ 5 km       | 15,000   |
-| 5 < distance ≤ 10 km  | 20,000   |
-| 10 < distance ≤ 20 km | 30,000   |
-| distance > 20 km      | 50,000   |
+The final shipping fee is determined through the following steps:
 
----
-
-# 5. Weight Surcharge
-
-| Weight            | Surcharge |
-| ----------------- | --------- |
-| weight ≤ 2 kg     | 0         |
-| 2 < weight ≤ 5 kg | 10,000    |
-| weight > 5 kg     | 20,000    |
+1. Determine the **base fee based on distance**
+2. Add **weight surcharge**
+3. Apply **customer discount**
+4. Check for **free shipping condition**
 
 ---
 
-# 6. Customer Discount
+# 6. Base Fee (Distance)
+
+The base shipping fee depends on the delivery distance.
+
+| Distance             | Base Fee (VND) |
+| -------------------- | -------------- |
+| distance ≤ 5 km      | 15000          |
+| 5 < distance ≤ 10 km | 20000          |
+| distance > 10 km     | 30000          |
+
+---
+
+# 7. Weight Surcharge
+
+Additional cost may apply depending on package weight.
+
+| Weight        | Surcharge (VND) |
+| ------------- | --------------- |
+| weight ≤ 2 kg | 0               |
+| weight > 2 kg | 20000           |
+
+---
+
+# 8. Customer Discount
+
+Some customers receive a discount.
 
 | Customer Type | Discount |
 | ------------- | -------- |
 | NORMAL        | 0%       |
-| MEMBER        | 10%      |
-| VIP           | 20%      |
+| VIP           | 10%      |
 
-The discount is applied **after base fee and weight surcharge are added**.
+The discount is applied **after the base fee and weight surcharge are added**.
 
 ---
 
-# 7. Free Shipping Rule
+# 9. Free Shipping Condition
 
-Free shipping is applied when:
+Shipping is **free** when all of the following conditions are satisfied:
 
-```
-order_value ≥ 500000 AND distance ≤ 10 km
-```
+- Customer type is **VIP**
+- distance ≤ 5 km
+- weight ≤ 2 kg
 
-If this condition is met:
+If all three conditions are met:
 
 ```
 final_shipping_fee = 0
 ```
 
-All other rules are ignored.
-
 ---
 
-# 8. Input Constraints
+# 10. Input Constraints
 
-Valid ranges:
+Valid input ranges:
 
 ```
-0 ≤ distance_km ≤ 100
-0 ≤ weight_kg ≤ 50
-0 ≤ order_value ≤ 10,000,000
+distance_km ≥ 0
+weight_kg ≥ 0
+```
+
+Customer type must be one of the following:
+
+```
+NORMAL
+VIP
 ```
 
 Invalid inputs should return:
@@ -111,182 +137,181 @@ INVALID_INPUT
 
 Examples of invalid inputs:
 
-- negative values
+- negative distance
+- negative weight
 - unsupported customer type
 
 ---
 
-# 9. Example Calculation
+# 11. Example Calculation
 
-Example 1
+### Example 1
 
 Input
 
 ```
-distance = 8 km
-weight = 3 kg
-customer = MEMBER
-order_value = 200000
+distance = 7 km
+weight = 1 kg
+customer = NORMAL
 ```
 
-Steps
+Base fee = 20000
+Weight surcharge = 0
 
-Base fee = 20,000
-Weight surcharge = 10,000
+Final fee
+
+```
+20000
+```
+
+---
+
+### Example 2
+
+Input
+
+```
+distance = 3 km
+weight = 3 kg
+customer = VIP
+```
+
+Base fee = 15000
+Weight surcharge = 20000
 
 Subtotal
 
 ```
-30,000
+35000
 ```
 
-Member discount (10%)
+VIP discount (10%)
 
 ```
-30,000 × 0.9 = 27,000
+35000 × 0.9 = 31500
 ```
 
 Final fee
 
 ```
-27,000
+31500
 ```
 
 ---
 
-Example 2
+### Example 3 (Free Shipping)
 
 Input
 
 ```
-distance = 6 km
-weight = 4 kg
-customer = NORMAL
-order_value = 600000
+distance = 3 km
+weight = 1 kg
+customer = VIP
 ```
 
-Condition
+Conditions satisfied:
 
-```
-order_value ≥ 500000 AND distance ≤ 10
-```
+- VIP customer
+- distance ≤ 5
+- weight ≤ 2
 
 Result
 
 ```
-Free shipping
-```
-
-Final fee
-
-```
-0
+final_shipping_fee = 0
 ```
 
 ---
 
-# 10. Required Implementation
+# 12. Required Implementation
 
-Implement a function:
+Implement the following function:
 
 ```
 calculate_shipping_fee(
     distance_km,
     weight_kg,
-    customer_type,
-    order_value
+    customer_type
 )
 ```
 
-Return the final shipping fee.
+The function must return the **final shipping fee in VND**.
 
 ---
 
-# 11. Testing Tasks
+# 13. Testing Tasks
 
-Students must perform testing using:
-
-### 1. Decision Table Testing
-
-Construct a decision table based on:
-
-- Free shipping condition
-- Distance ranges
-- Weight ranges
-- Customer types
-
-Generate test cases that cover the decision rules.
+Students must test the system using **black-box testing techniques**.
 
 ---
 
-### 2. Boundary Value Analysis
+## 13.1 Decision Table Testing
 
-Identify boundaries for:
+Construct a **decision table** based on:
 
-Distance
+- distance ranges
+- weight ranges
+- customer types
+- free shipping condition
+
+Generate test cases that cover all decision rules.
+
+---
+
+## 13.2 Boundary Value Analysis
+
+Identify important boundary values.
+
+### Distance boundaries
 
 ```
 5 km
 10 km
-20 km
 ```
 
-Weight
-
-```
-2 kg
-5 kg
-```
-
-Order value
-
-```
-500000
-```
-
-Create boundary test cases such as:
+Example boundary tests:
 
 ```
 4.9
 5
 5.1
-```
-
-```
-499999
-500000
-500001
+9.9
+10
+10.1
 ```
 
 ---
 
-# 12. Expected Deliverables
+### Weight boundaries
 
-The project submission should include:
+```
+2 kg
+```
+
+Example boundary tests:
+
+```
+1.9
+2
+2.1
+```
+
+---
+
+# 14. Expected Deliverables
+
+The final submission should include:
 
 1. Source code implementation
 2. Decision table
-3. Boundary value test cases
-4. Test results
+3. Designed test cases
+4. Test execution results
 5. Bug report (if any)
 
 ---
 
-# 13. Suggested Extensions (Optional)
+# 15. Purpose of the Exercise
 
-To extend the system later for more advanced testing:
+This exercise helps students understand how to apply **systematic test design techniques** to verify the correctness of a software system.
 
-Possible additional rules:
-
-- Surge pricing during peak hours
-- Weather surcharge
-- Express shipping option
-- Promo code discounts
-
-These extensions allow practice with:
-
-- Pairwise testing
-- State transition testing
-- Combinatorial testing
-
----
+It demonstrates how **decision tables and boundary value testing** can be used to ensure that a system behaves correctly under different input conditions.
