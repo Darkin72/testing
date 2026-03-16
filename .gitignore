@@ -205,3 +205,5 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+__pycache__/shipping_calculator.cpython-311.pyc
+__pycache__/test_shipping_calculator.cpython-311-pytest-9.0.2.pyc
